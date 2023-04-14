@@ -23,25 +23,43 @@ app.use(cors({
 
 app.use(express.json());
 
-// define your routes here
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
 
 app.post('/runQuery', async (req, res) => {
     const { query } = req.body;
 
-    console.log(query);
+    // console.log(query);
     try{
     const connection = await pool.getConnection();
 
+    console.log('running query: ', query)
     const queryResults = await connection.query(query);
     await connection.release();
-    res.status(200).json(queryResults)
+    
+
+    // filteredResults = queryResults.map(item => {
+    //     Amount_Played: parseFloat(item.Amount_Played);
+    //     Amount_Won: parseFloat(item.Amount_)
+    // })
+
+    res.status(200).send(queryResults)
+    // res.status(200).json(queryResults)
     }catch(error){
         console.log(error);
         res.status(500).json(error);
     }
+})
+
+app.post('/fetchHeaderNames', async (req, res) => {
+    // console.log(req.body);
+    const {tableName} = req.body;
+
+    const connection = await pool.getConnection();
+    const resp = await connection.query(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${tableName}';`)
+    console.log(resp);
+
+    connection.release();
+
+    res.status(200).json(resp)
 })
 
 // define a catchall error handler
